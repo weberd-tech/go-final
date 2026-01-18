@@ -26,4 +26,7 @@ func main() {
 	if err := http.ListenAndServe(port, nil); err != nil {
 		log.Fatal(err)
 	}
+	if err := db.Close(); err != nil {
+		log.Printf("Ошибка закрытия БД: %v", err)
+	}
 }

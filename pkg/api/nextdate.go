@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -10,6 +11,10 @@ import (
 const dateFormat = "20060102"
 
 func nextDateHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	nowStr := r.FormValue("now")
 	dateStr := r.FormValue("date")
 	repeat := r.FormValue("repeat")
@@ -34,5 +39,8 @@ func nextDateHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(nextDate))
+	if _, err := w.Write([]byte(nextDate)); err != nil {
+		log.Printf("Failed to write response: %v", err)
+		return
+	}
 }

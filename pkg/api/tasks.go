@@ -6,6 +6,8 @@ import (
 	"todo/pkg/db"
 )
 
+const limitTasts = 50
+
 type TasksResp struct {
 	Tasks []*db.Task `json:"tasks"`
 }
@@ -16,9 +18,9 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	allTasks, err := db.Tasks(50)
+	allTasks, err := db.Tasks(limitTasts)
 	if err != nil {
-		writeJSON(w, map[string]string{"error": err.Error()})
+		writeJSON(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
 		return
 	}
 
@@ -29,5 +31,5 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 	response := TasksResp{
 		Tasks: allTasks,
 	}
-	writeJSON(w, response)
+	writeJSON(w, response, http.StatusOK)
 }

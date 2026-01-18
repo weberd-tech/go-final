@@ -104,14 +104,11 @@ func UpdateTask(task *Task) error {
 	return nil
 }
 
-func UpdateDate(next string, id string) error {
-	taskId, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		return fmt.Errorf("incorrect id for updating task")
-	}
+func UpdateDate(next string, id int64) error {
 
 	sql := `UPDATE scheduler SET date = ? WHERE id = ?`
-	result, err := db.Exec(sql, next, taskId)
+
+	result, err := db.Exec(sql, next, id)
 	if err != nil {
 		return err
 	}

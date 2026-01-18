@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -9,10 +10,17 @@ import (
 	"todo/pkg/db"
 )
 
-func writeJSON(w http.ResponseWriter, data any) {
+func writeJSON(w http.ResponseWriter, data any, statusCode int) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	encoder := json.NewEncoder(w)
-	encoder.Encode(data)
+	w.WriteHeader(statusCode)
+
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		log.Printf("JSON encode error: %v", err)
+	}
+}
+
+func jsonError(w http.ResponseWriter, msg string, statusCode int) {
+	writeJSON(w, map[string]string{"error": msg}, statusCode)
 }
 
 func checkDate(task *db.Task) error {
@@ -47,31 +55,33 @@ func checkDate(task *db.Task) error {
 }
 
 func addTaskHandler(w http.ResponseWriter, r *http.Request) {
-	var newTask db.Task
+	if r.Method != "POST" {
+		jsonError(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
+	var newTask db.Task
 	decoder := json.NewDecoder(r.Body)
-	decodeErr := decoder.Decode(&newTask)
-	if decodeErr != nil {
-		writeJSON(w, map[string]string{"error": decodeErr.Error()})
+	if err := decoder.Decode(&newTask); err != nil {
+		jsonError(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
 	if newTask.Title == "" {
-		writeJSON(w, map[string]string{"error": "Не указан заголовок задачи"})
+		jsonError(w, "Не указан заголовок задачи", http.StatusBadRequest)
 		return
 	}
 
-	checkErr := checkDate(&newTask)
-	if checkErr != nil {
-		writeJSON(w, map[string]string{"error": checkErr.Error()})
+	if err := checkDate(&newTask); err != nil {
+		jsonError(w, err.Error(), http.StatusUnprocessableEntity)
 		return
 	}
 
-	taskId, addErr := db.AddTask(&newTask)
-	if addErr != nil {
-		writeJSON(w, map[string]string{"error": addErr.Error()})
+	id, err := db.AddTask(&newTask)
+	if err != nil {
+		jsonError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	writeJSON(w, map[string]string{"id": taskId})
+	writeJSON(w, map[string]string{"id": id}, http.StatusCreated)
 }
