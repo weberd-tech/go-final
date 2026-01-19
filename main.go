@@ -26,6 +26,6 @@ func main() {
 	fmt.Printf("Сервер запущен на http://localhost%s\n", port)
 
 	if err := http.ListenAndServe(port, nil); err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }
