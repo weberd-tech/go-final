@@ -30,16 +30,16 @@ func checkDate(task *db.Task) error {
 		task.Date = currentTime.Format(dateFormat)
 	}
 
-	_, parseErr := time.Parse(dateFormat, task.Date)
-	if parseErr != nil {
-		return parseErr
+	_, err := time.Parse(dateFormat, task.Date)
+	if err != nil {
+		return err
 	}
 
 	var nextDate string
 	if task.Repeat != "" {
-		nextDate, parseErr = date.NextDate(currentTime, task.Date, task.Repeat)
-		if parseErr != nil {
-			return parseErr
+		nextDate, err = date.NextDate(currentTime, task.Date, task.Repeat)
+		if err != nil {
+			return err
 		}
 	}
 
